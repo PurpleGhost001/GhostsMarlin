@@ -846,10 +846,10 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
       #if EXTRA_PROBING > 0
         uint8_t p = 0; p < TOTAL_PROBING; p++
       #else
-        uint8_t p = TOTAL_PROBING; p--;
+        uint8_t p = TOTAL_PROBING; 
+        p--;
       #endif
     )
-  #endif
     {
       // If the probe won't tare, return
       if (TERN0(PROBE_TARE, tare())) return true;
@@ -886,6 +886,7 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
         ) do_z_clearance(z + (Z_CLEARANCE_MULTI_PROBE), false);
       #endif
     }
+#endif
 
   #if TOTAL_PROBING > 2
 

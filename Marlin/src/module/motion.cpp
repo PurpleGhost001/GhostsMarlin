@@ -974,10 +974,16 @@ void do_blocking_move_to(NUM_AXIS_ARGS_(const_float_t) const_feedRate_t fr_mm_s/
   #else
 
     #if HAS_Z_AXIS  // If Z needs to raise, do it before moving XY
-      if (current_position.z < z) { current_position.z = z; line_to_current_position(z_feedrate); }
+      if (current_position.z < z) 
+      { 
+        current_position.z = z; 
+        line_to_current_position(z_feedrate); 
+      }
+
     #endif
 
-    current_position.set(TERN_(HAS_X_AXIS, x) OPTARG(HAS_Y_AXIS, y)); line_to_current_position(xy_feedrate);
+    current_position.set(TERN_(HAS_X_AXIS, x) OPTARG(HAS_Y_AXIS, y)); 
+    line_to_current_position(xy_feedrate);
 
     #if SECONDARY_AXES
       secondary_axis_moves(SECONDARY_AXIS_LIST(i, j, k, u, v, w), fr_mm_s);
@@ -2211,8 +2217,7 @@ void prepare_line_to_destination() {
     }
 
     // Only do some things when moving towards an endstop
-    const int8_t axis_home_dir = TERN0(DUAL_X_CARRIAGE, axis == X_AXIS)
-                  ? TOOL_X_HOME_DIR(active_extruder) : home_dir(axis);
+    const int8_t axis_home_dir = TERN0(DUAL_X_CARRIAGE, axis == X_AXIS) ? TOOL_X_HOME_DIR(active_extruder) : home_dir(axis);
     const bool is_home_dir = (axis_home_dir > 0) == (distance > 0);
 
     #if ENABLED(SENSORLESS_HOMING)
@@ -2243,7 +2248,7 @@ void prepare_line_to_destination() {
         #endif
       #endif
     }
-
+   
     #if ANY(MORGAN_SCARA, MP_SCARA)
       // Tell the planner the axis is at 0
       current_position[axis] = 0;
@@ -2251,7 +2256,7 @@ void prepare_line_to_destination() {
       current_position[axis] = distance;
       line_to_current_position(home_fr_mm_s);
     #else
-      // Get the ABC or XYZ positions in mm
+     // Get the ABC or XYZ positions in mm
       abce_pos_t target = planner.get_axis_positions_mm();
 
       target[axis] = 0;                         // Set the single homing axis to 0
@@ -2461,7 +2466,11 @@ void prepare_line_to_destination() {
     // Return early if probe deployment fails.
     //
     #if HOMING_Z_WITH_PROBE
-      if (axis == Z_AXIS && probe.deploy()) { probe.stow(); return; }
+      if (axis == Z_AXIS && probe.deploy())
+        { 
+          probe.stow();
+          return; 
+        }
     #endif
 
     // Set flags for X, Y, Z motor locking
@@ -2484,7 +2493,11 @@ void prepare_line_to_destination() {
         #if ENABLED(BLTOUCH)
           // BLTouch was deployed above, but get the alarm state.
           // Stow and return early if there is a deploy alarm.
-          if (bltouch.deploy()) { bltouch.stow(); return; }
+          if (bltouch.deploy()) 
+          { 
+            bltouch.stow(); 
+            return; 
+          }
         #endif
 
         // Tare the probe. Stow and return early if it fails
@@ -2525,7 +2538,12 @@ void prepare_line_to_destination() {
 
     // Determine if a homing bump will be done and the bumps distance
     // When homing Z with probe respect probe clearance
-    const bool use_probe_bump = TERN0(HOMING_Z_WITH_PROBE, axis == Z_AXIS && home_bump_mm(axis));
+    //######Ghost
+    const bool old_bump_logik = TERN0(HOMING_Z_WITH_PROBE, axis == Z_AXIS && home_bump_mm(axis));
+    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Bumb: ", old_bump_logik);
+
+    const bool use_probe_bump = false;
+
     const float bump = axis_home_dir * (
       use_probe_bump ? _MAX(TERN0(HOMING_Z_WITH_PROBE, Z_CLEARANCE_BETWEEN_PROBES), home_bump_mm(axis)) : home_bump_mm(axis)
     );
@@ -2586,6 +2604,42 @@ void prepare_line_to_destination() {
 
     #if ALL(HOMING_Z_WITH_PROBE, BLTOUCH)
       if (axis == Z_AXIS) bltouch.stow(); // The final STOW
+    #endif
+
+    #define MULTIPLEZHOMEING;
+    #if(ENABLED(MULTIPLEZHOMEING))
+      if(TERN0(HOMING_Z_WITH_PROBE, axis == Z_AXIS))
+      {
+        if (DEBUGGING(LEVELING)) DEBUG_POS("Ausgangsposition", current_position);
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("platz machen nach initialem homen");
+        //platz machen nach initialem homen
+        do_z_clearance(current_position[axis] + (Z_CLEARANCE_MULTI_PROBE), false);
+
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Probe Deployen");
+        //probe deployen
+        if (probe.deploy())
+        { 
+          probe.stow();
+          //Fehler
+          return; 
+        }
+
+        if (DEBUGGING(LEVELING)) DEBUG_POS("Position vor run_z_probe", current_position);
+        current_position[axis] = probe.run_z_probe(true, Z_PROBE_LOW_POINT, Z_TWEEN_SAFE_CLEARANCE) + probe.offset.z
+        if (DEBUGGING(LEVELING)) DEBUG_POS("Position nach run_z_probe", current_position);
+
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Probe Stowen");
+        probe.stow()
+
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Auf position nach run_z_probe fahren");
+        do_blocking_move_to_z(current_position[axis], homing_feedrate(Z_AXIS));
+
+        if (DEBUGGING(LEVELING)) DEBUG_POS("Position vor 0", current_position);
+        abce_pos_t target = planner.get_axis_positions_mm();
+        target[axis] = 0;
+        planner.set_machine_position_mm(target);
+        if (DEBUGGING(LEVELING)) DEBUG_POS("Position nach set_machine_position_mm", current_position);
+      }
     #endif
 
     #if HAS_EXTRA_ENDSTOPS
