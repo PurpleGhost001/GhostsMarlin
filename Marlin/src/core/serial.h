@@ -250,8 +250,14 @@ inline void print_xyze(const xyze_pos_t &xyze, FSTR_P const prefix=nullptr, FSTR
   print_xyze(LOGICAL_AXIS_ELEM_LC_(xyze) prefix, suffix);
 }
 
+void print_xyz_withPrecision(NUM_AXIS_ARGS_(const_float_t) FSTR_P const prefix=nullptr, int8_t preci=2);
+inline void print_xyz_withPrecision(const xyz_pos_t &xyz, FSTR_P const prefix=nullptr, int8_t preci=2){
+  print_xyz_withPrecision(NUM_AXIS_ELEM_(xyz) prefix, preci);
+}
+
 #define SERIAL_POS(SUFFIX,VAR) do { print_xyz(VAR, F("  " STRINGIFY(VAR) "="), F(" : " SUFFIX "\n")); }while(0)
 #define SERIAL_XYZ(PREFIX,V...) do { print_xyz(V, F(PREFIX)); }while(0)
+#define SERIAL_POS_PREC(VAR,PREFIX,PRECI) do { print_xyz_withPrecision(VAR, F( PREFIX " : "), PRECI); }while(0)
 
 /**
  * Extended string that can echo itself to serial

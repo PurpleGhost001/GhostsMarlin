@@ -840,6 +840,7 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
     float probes[TOTAL_PROBING];
   #endif
 
+  uint8_t c = 0;
   #if TOTAL_PROBING > 2
     float probes_z_sum = 0;
     for (
@@ -851,6 +852,7 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
       #endif
     )
     {
+      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Prope Iteration:", c);
       // If the probe won't tare, return
       if (TERN0(PROBE_TARE, tare())) return true;
 
@@ -861,6 +863,8 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
       TERN_(MEASURE_BACKLASH_WHEN_PROBING, backlash.measure_with_probe());
 
       const float z = DIFF_TERN(HAS_DELTA_SENSORLESS_PROBING, current_position.z, largest_sensorless_adj);
+      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Z between:");
+      if (DEBUGGING(LEVELING)) SERIAL_ECHO(p_float_t(z, 3));
 
       #if EXTRA_PROBING > 0
         // Insert Z measurement into probes[]. Keep it sorted ascending.
@@ -885,6 +889,7 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
           #endif
         ) do_z_clearance(z + (Z_CLEARANCE_MULTI_PROBE), false);
       #endif
+      c++;
     }
 #endif
 

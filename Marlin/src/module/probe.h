@@ -196,6 +196,8 @@ public:
       return probe_at_point(pos.x, pos.y, raise_after, verbose_level, probe_relative, sanity_check, z_min_point, z_clearance, raise_after_is_rel);
     }
 
+    static float run_z_probe_multipleZHomeing(const bool sanity_check, const_float_t z_min_point, const_float_t z_clearance) { return run_z_probe(sanity_check, z_min_point, z_clearance); }
+
   #else // !HAS_BED_PROBE
 
     static constexpr xyz_pos_t offset = xyz_pos_t(NUM_AXIS_ARRAY_1(0)); // See #16767

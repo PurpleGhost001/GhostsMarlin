@@ -1077,6 +1077,7 @@ void do_blocking_move_to(const xyze_pos_t &raw, const_feedRate_t fr_mm_s/*=0.0f*
     if ((!lower_allowed && zdest < current_position.z) || zdest == current_position.z) return;
     do_blocking_move_to_z(zdest, TERN(HAS_BED_PROBE, z_probe_fast_mm_s, homing_feedrate(Z_AXIS)));
   }
+
   void do_z_clearance_by(const_float_t zclear) {
     if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("do_z_clearance_by(", zclear, ")");
     do_z_clearance(current_position.z + zclear, false);
@@ -2259,8 +2260,16 @@ void prepare_line_to_destination() {
      // Get the ABC or XYZ positions in mm
       abce_pos_t target = planner.get_axis_positions_mm();
 
+      DEBUG_ECHOLNPGM("\n");
+      SERIAL_POS_PREC(current_position, "current_position vor set_machine_position_mm", 4);
+      SERIAL_POS_PREC(target, "target vor set_machine_position_mm", 4);
+
+
       target[axis] = 0;                         // Set the single homing axis to 0
       planner.set_machine_position_mm(target);  // Update the machine position
+      SERIAL_POS_PREC(current_position, "current_position nach set_machine_position_mm", 4);
+      SERIAL_POS_PREC(target, "target nach set_machine_position_mm", 4);
+      DEBUG_ECHOLNPGM("\n");
 
       #if HAS_DIST_MM_ARG
         const xyze_float_t cart_dist_mm{0};
@@ -2539,13 +2548,14 @@ void prepare_line_to_destination() {
     // Determine if a homing bump will be done and the bumps distance
     // When homing Z with probe respect probe clearance
     //######Ghost
-    const bool old_bump_logik = TERN0(HOMING_Z_WITH_PROBE, axis == Z_AXIS && home_bump_mm(axis));
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Bumb: ", old_bump_logik);
+    const bool use_probe_bump = TERN0(HOMING_Z_WITH_PROBE, axis == Z_AXIS && home_bump_mm(axis));
 
-    const bool use_probe_bump = false;
+    // const float bump = axis_home_dir * (
+    //   use_probe_bump ? _MAX(TERN0(HOMING_Z_WITH_PROBE, Z_CLEARANCE_BETWEEN_PROBES), home_bump_mm(axis)) : home_bump_mm(axis)
+    // );
 
     const float bump = axis_home_dir * (
-      use_probe_bump ? _MAX(TERN0(HOMING_Z_WITH_PROBE, Z_CLEARANCE_BETWEEN_PROBES), home_bump_mm(axis)) : home_bump_mm(axis)
+      false ? _MAX(TERN0(HOMING_Z_WITH_PROBE, Z_CLEARANCE_BETWEEN_PROBES), home_bump_mm(axis)) : home_bump_mm(axis)
     );
 
     //
@@ -2553,10 +2563,13 @@ void prepare_line_to_destination() {
     //
     const float move_length = 1.5f * max_length(TERN(DELTA, Z_AXIS, axis)) * axis_home_dir;
     if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Home Fast: ", move_length, "mm");
-    do_homing_move(axis, move_length, 0.0, !use_probe_bump);
+    do_homing_move(axis, move_length, 0.0, true);
+    //do_homing_move(axis, move_length, 0.0, !use_probe_bump);
+
 
     // If a second homing move is configured...
-    if (bump) {
+    //if (bump) {
+    if (0) {
       #if ALL(HOMING_Z_WITH_PROBE, BLTOUCH)
         if (axis == Z_AXIS && !bltouch.high_speed_mode) bltouch.stow(); // Intermediate STOW (in LOW SPEED MODE)
       #endif
@@ -2606,39 +2619,75 @@ void prepare_line_to_destination() {
       if (axis == Z_AXIS) bltouch.stow(); // The final STOW
     #endif
 
-    #define MULTIPLEZHOMEING;
+    #define MULTIPLEZHOMEING
     #if(ENABLED(MULTIPLEZHOMEING))
       if(TERN0(HOMING_Z_WITH_PROBE, axis == Z_AXIS))
       {
-        if (DEBUGGING(LEVELING)) DEBUG_POS("Ausgangsposition", current_position);
-        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("platz machen nach initialem homen");
+        xyze_pos_t plannerPos = planner.get_axis_positions_mm();
+        current_position[axis] = 0;
+        current_position[axis] -= probe.offset.z;
+
+        DEBUG_ECHOLNPGM("#");
+        SERIAL_POS_PREC(current_position, "Ausgangsposition current_position", 4);
+        SERIAL_POS_PREC(plannerPos, "Ausgangsposition plannerPos", 4);
+        //current_position und plannerPos noch verschieden
+        sync_plan_position();
+        //jetzt syncron
+
+        //xyze_pos_t abce_pos_t
+        DEBUG_ECHOLNPGM("#");
+
+        DEBUG_ECHOLNPGM("platz_machen nach initialem homen");
         //platz machen nach initialem homen
         do_z_clearance(current_position[axis] + (Z_CLEARANCE_MULTI_PROBE), false);
+        plannerPos = planner.get_axis_positions_mm();
+        DEBUG_ECHOLNPGM("#");
+        SERIAL_POS_PREC(current_position, "nach platz_machen current_position", 4);
+        SERIAL_POS_PREC(plannerPos, "nach platz_machen plannerPos", 4);
+        DEBUG_ECHOLNPGM("#"); 
 
-        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Probe Deployen");
-        //probe deployen
-        if (probe.deploy())
-        { 
-          probe.stow();
-          //Fehler
-          return; 
+        // DEBUG_ECHOLNPGM("Testdeploy");
+        // bltouch.deploy();
+        // DEBUG_ECHOLNPGM("#\n");
+
+        // DEBUG_ECHOLNPGM("Teststow");
+        // bltouch.stow();
+        // DEBUG_ECHOLNPGM("#");
+
+        float measured_z;
+        SERIAL_POS_PREC(current_position, "current_position", 4);
+        measured_z = probe.run_z_probe_multipleZHomeing(true, Z_PROBE_LOW_POINT, Z_TWEEN_SAFE_CLEARANCE);
+        plannerPos = planner.get_axis_positions_mm();
+        SERIAL_POS_PREC(current_position, "current_position nach run_z_probe", 4);
+        SERIAL_POS_PREC(plannerPos, "plannerPos nach run_z_probe", 4);
+        DEBUG_ECHOLNPGM("#");
+
+        if (isnan(measured_z)) 
+        {
+          DEBUG_ECHOLNPGM("Probe FAIL OHJEE");
+          bltouch.stow();
+          current_position[axis] = 0;
+          current_position[axis] -= probe.offset.z;
+          sync_plan_position();
+          return;
         }
 
-        if (DEBUGGING(LEVELING)) DEBUG_POS("Position vor run_z_probe", current_position);
-        current_position[axis] = probe.run_z_probe(true, Z_PROBE_LOW_POINT, Z_TWEEN_SAFE_CLEARANCE) + probe.offset.z
-        if (DEBUGGING(LEVELING)) DEBUG_POS("Position nach run_z_probe", current_position);
+        DEBUG_ECHOPGM("Erfolg_Z: "); SERIAL_ECHO(p_float_t(measured_z, 3)); //SERIAL_ECHOLN() kann kein float
+        DEBUG_ECHOLNPGM("#");
+        current_position[axis] = measured_z;
+        feedRate_t moveToFeedrate =  homing_feedrate(axis);
+        DEBUG_ECHOPGM("Fahre_auf: "); SERIAL_ECHO(p_float_t(current_position[axis], 4)); DEBUG_ECHOPGM(" mit Feedrate: "); SERIAL_ECHO(p_float_t(moveToFeedrate, 1));
+        do_blocking_move_to_z(current_position[axis], moveToFeedrate * 0.5F);
+        DEBUG_ECHOLNPGM("#");
 
-        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Probe Stowen");
-        probe.stow()
+        plannerPos = planner.get_axis_positions_mm();
+        SERIAL_POS_PREC(current_position, "current_position nach Fahre_auf", 4);
+        SERIAL_POS_PREC(plannerPos, "plannerPos nach Fahre_auf", 4);
 
-        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Auf position nach run_z_probe fahren");
-        do_blocking_move_to_z(current_position[axis], homing_feedrate(Z_AXIS));
-
-        if (DEBUGGING(LEVELING)) DEBUG_POS("Position vor 0", current_position);
-        abce_pos_t target = planner.get_axis_positions_mm();
-        target[axis] = 0;
-        planner.set_machine_position_mm(target);
-        if (DEBUGGING(LEVELING)) DEBUG_POS("Position nach set_machine_position_mm", current_position);
+        DEBUG_ECHOLNPGM("#");
+        DEBUG_ECHOLNPGM("Probe Stowen");
+        bltouch.stow();
+        DEBUG_ECHOLNPGM("Ende");
       }
     #endif
 
@@ -2873,9 +2922,10 @@ void prepare_line_to_destination() {
  */
 void set_axis_is_at_home(const AxisEnum axis) {
   if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM(">>> set_axis_is_at_home(", C(AXIS_CHAR(axis)), ")");
-
+  if (DEBUGGING(LEVELING)) DEBUG_POS("1", current_position);
   set_axis_trusted(axis);
   set_axis_homed(axis);
+  if (DEBUGGING(LEVELING)) DEBUG_POS("2", current_position);
 
   #if ENABLED(DUAL_X_CARRIAGE)
     if (axis == X_AXIS && (active_extruder == 1 || dual_x_carriage_mode == DXC_DUPLICATION_MODE)) {
