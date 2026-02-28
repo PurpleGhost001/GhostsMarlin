@@ -852,7 +852,7 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
       #endif
     )
     {
-      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Prope Iteration:", c);
+      DEBUG_ECHOLNPGM("Prope Iteration:", c);
       // If the probe won't tare, return
       if (TERN0(PROBE_TARE, tare())) return true;
 
@@ -863,8 +863,10 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
       TERN_(MEASURE_BACKLASH_WHEN_PROBING, backlash.measure_with_probe());
 
       const float z = DIFF_TERN(HAS_DELTA_SENSORLESS_PROBING, current_position.z, largest_sensorless_adj);
-      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Z between:");
-      if (DEBUGGING(LEVELING)) SERIAL_ECHO(p_float_t(z, 3));
+      DEBUG_ECHOLNPGM("Z between:");
+      SERIAL_ECHO(p_float_t(z, 3));
+      DEBUG_ECHOLNPGM(" #");
+
 
       #if EXTRA_PROBING > 0
         // Insert Z measurement into probes[]. Keep it sorted ascending.
@@ -930,6 +932,10 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
     const float measured_z = current_position.z;
 
   #endif
+
+  DEBUG_ECHOLNPGM("final Z:");
+  SERIAL_ECHO(p_float_t(measured_z, 3));
+  DEBUG_ECHOLNPGM(" #");
 
   return DIFF_TERN(HAS_HOTEND_OFFSET, measured_z, hotend_offset[active_extruder].z);
 }

@@ -2627,24 +2627,24 @@ void prepare_line_to_destination() {
         current_position[axis] = 0;
         current_position[axis] -= probe.offset.z;
 
-        DEBUG_ECHOLNPGM("#");
-        SERIAL_POS_PREC(current_position, "Ausgangsposition current_position", 4);
-        SERIAL_POS_PREC(plannerPos, "Ausgangsposition plannerPos", 4);
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "Ausgangsposition current_position", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "Ausgangsposition plannerPos", 4);
         //current_position und plannerPos noch verschieden
         sync_plan_position();
         //jetzt syncron
 
         //xyze_pos_t abce_pos_t
-        DEBUG_ECHOLNPGM("#");
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
 
-        DEBUG_ECHOLNPGM("platz_machen nach initialem homen");
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("platz_machen nach initialem homen");
         //platz machen nach initialem homen
         do_z_clearance(current_position[axis] + (Z_CLEARANCE_MULTI_PROBE), false);
         plannerPos = planner.get_axis_positions_mm();
-        DEBUG_ECHOLNPGM("#");
-        SERIAL_POS_PREC(current_position, "nach platz_machen current_position", 4);
-        SERIAL_POS_PREC(plannerPos, "nach platz_machen plannerPos", 4);
-        DEBUG_ECHOLNPGM("#"); 
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "nach platz_machen current_position", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "nach platz_machen plannerPos", 4);
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#"); 
 
         // DEBUG_ECHOLNPGM("Testdeploy");
         // bltouch.deploy();
@@ -2655,12 +2655,12 @@ void prepare_line_to_destination() {
         // DEBUG_ECHOLNPGM("#");
 
         float measured_z;
-        SERIAL_POS_PREC(current_position, "current_position", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "current_position", 4);
         measured_z = probe.run_z_probe_multipleZHomeing(true, Z_PROBE_LOW_POINT, Z_TWEEN_SAFE_CLEARANCE);
         plannerPos = planner.get_axis_positions_mm();
-        SERIAL_POS_PREC(current_position, "current_position nach run_z_probe", 4);
-        SERIAL_POS_PREC(plannerPos, "plannerPos nach run_z_probe", 4);
-        DEBUG_ECHOLNPGM("#");
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "current_position nach run_z_probe", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "plannerPos nach run_z_probe", 4);
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
 
         if (isnan(measured_z)) 
         {
@@ -2681,13 +2681,13 @@ void prepare_line_to_destination() {
         DEBUG_ECHOLNPGM("#");
 
         plannerPos = planner.get_axis_positions_mm();
-        SERIAL_POS_PREC(current_position, "current_position nach Fahre_auf", 4);
-        SERIAL_POS_PREC(plannerPos, "plannerPos nach Fahre_auf", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "current_position nach Fahre_auf", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "plannerPos nach Fahre_auf", 4);
 
-        DEBUG_ECHOLNPGM("#");
-        DEBUG_ECHOLNPGM("Probe Stowen");
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Probe Stowen");
         bltouch.stow();
-        DEBUG_ECHOLNPGM("Ende");
+        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Ende");
       }
     #endif
 
