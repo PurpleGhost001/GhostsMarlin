@@ -2259,18 +2259,8 @@ void prepare_line_to_destination() {
     #else
      // Get the ABC or XYZ positions in mm
       abce_pos_t target = planner.get_axis_positions_mm();
-
-      DEBUG_ECHOLNPGM("\n");
-      SERIAL_POS_PREC(current_position, "current_position vor set_machine_position_mm", 4);
-      SERIAL_POS_PREC(target, "target vor set_machine_position_mm", 4);
-
-
       target[axis] = 0;                         // Set the single homing axis to 0
       planner.set_machine_position_mm(target);  // Update the machine position
-      SERIAL_POS_PREC(current_position, "current_position nach set_machine_position_mm", 4);
-      SERIAL_POS_PREC(target, "target nach set_machine_position_mm", 4);
-      DEBUG_ECHOLNPGM("\n");
-
       #if HAS_DIST_MM_ARG
         const xyze_float_t cart_dist_mm{0};
       #endif
@@ -2656,7 +2646,7 @@ void prepare_line_to_destination() {
 
         float measured_z;
         if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "current_position", 4);
-        measured_z = probe.run_z_probe_multipleZHomeing(true, Z_PROBE_LOW_POINT, Z_TWEEN_SAFE_CLEARANCE);
+        measured_z = probe.run_z_probe_multipleZHomeing(true, Z_PROBE_LOW_POINT, Z_TWEEN_SAFE_CLEARANCE, probe.probingRuns);
         plannerPos = planner.get_axis_positions_mm();
         if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "current_position nach run_z_probe", 4);
         if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "plannerPos nach run_z_probe", 4);
@@ -2676,7 +2666,11 @@ void prepare_line_to_destination() {
         DEBUG_ECHOLNPGM("#");
         current_position[axis] = measured_z;
         feedRate_t moveToFeedrate =  homing_feedrate(axis);
-        DEBUG_ECHOPGM("Fahre_auf: "); SERIAL_ECHO(p_float_t(current_position[axis], 4)); DEBUG_ECHOPGM(" mit Feedrate: "); SERIAL_ECHO(p_float_t(moveToFeedrate, 1));
+        if (DEBUGGING(LEVELING)){
+          DEBUG_ECHOPGM("Fahre_auf: "); SERIAL_ECHO(p_float_t(current_position[axis], 3)); 
+          DEBUG_ECHOPGM(" mit Feedrate: "); SERIAL_ECHO(p_float_t(moveToFeedrate, 1));
+        } 
+
         do_blocking_move_to_z(current_position[axis], moveToFeedrate * 0.5F);
         DEBUG_ECHOLNPGM("#");
 

@@ -104,6 +104,7 @@
 Probe probe;
 
 xyz_pos_t Probe::offset; // Initialized by settings.load
+uint8_t Probe::probingRuns = int();
 
 #if HAS_PROBE_XY_OFFSET
   const xy_pos_t &Probe::offset_xy = Probe::offset;
@@ -774,10 +775,16 @@ bool Probe::probe_down_to_z(const_float_t z, const_feedRate_t fr_mm_s) {
  *
  * @return The Z position of the bed at the current XY or NAN on error.
  */
-float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_point/*=Z_PROBE_LOW_POINT*/, const_float_t z_clearance/*=Z_TWEEN_SAFE_CLEARANCE*/) {
+float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_point/*=Z_PROBE_LOW_POINT*/, const_float_t z_clearance/*=Z_TWEEN_SAFE_CLEARANCE*/, uint8_t probing_iterations) {
   DEBUG_SECTION(log_probe, "Probe::run_z_probe", DEBUGGING(LEVELING));
 
   const float zoffs = SUM_TERN(HAS_HOTEND_OFFSET, -offset.z, hotend_offset[active_extruder].z);
+
+  uint8_t tProbing = TOTAL_PROBING;
+  if(probing_iterations != 0){
+    tProbing = probing_iterations;
+    DEBUG_ECHOLNPGM("probing_iterations: ", tProbing);
+  }
 
   auto try_to_probe = [&](PGM_P const plbl, const_float_t z_probe_low_point, const feedRate_t fr_mm_s, const bool scheck) -> bool {
     constexpr float error_tolerance = Z_PROBE_ERROR_TOLERANCE;
@@ -847,7 +854,7 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
       #if EXTRA_PROBING > 0
         uint8_t p = 0; p < TOTAL_PROBING; p++
       #else
-        uint8_t p = TOTAL_PROBING; 
+        uint8_t p = tProbing; 
         p--;
       #endif
     )
@@ -915,7 +922,7 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
 
     #endif
 
-    const float measured_z = probes_z_sum * RECIPROCAL(MULTIPLE_PROBING);
+    const float measured_z = probes_z_sum * RECIPROCAL(tProbing);
 
   #elif TOTAL_PROBING == 2
 

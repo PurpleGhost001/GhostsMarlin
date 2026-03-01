@@ -467,6 +467,9 @@ void GcodeSuite::G28() {
 
       #elif HAS_Z_AXIS
 
+        const bool seenI = parser.seenval('I');
+        probe.probingRuns = seenI ? parser.value_int() : 0;
+
         // Home Z last if homing towards the bed
         #if DISABLED(HOME_Z_FIRST)
           if (doZ) {
