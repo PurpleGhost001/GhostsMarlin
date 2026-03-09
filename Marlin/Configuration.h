@@ -615,7 +615,7 @@
 #endif
 
 #if TEMP_SENSOR_BED
-  #define TEMP_BED_RESIDENCY_TIME     60  // (seconds) Time to wait for bed to "settle" in M190
+  #define TEMP_BED_RESIDENCY_TIME     150  // (seconds) Time to wait for bed to "settle" in M190
   #define TEMP_BED_WINDOW              1  // (°C) Temperature proximity for the "temperature reached" timer
   #define TEMP_BED_HYSTERESIS          3  // (°C) Temperature proximity considered "close enough" to the target
 #endif
@@ -1905,7 +1905,7 @@
 // @section geometry
 
 // The size of the printable area
-#define X_BED_SIZE 280
+#define X_BED_SIZE 310
 #define Y_BED_SIZE 290
 
 // Travel limits (linear=mm, rotational=°) after homing, corresponding to endstop positions.
