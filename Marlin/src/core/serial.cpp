@@ -135,6 +135,21 @@ void print_xyz(NUM_AXIS_ARGS_(const_float_t) FSTR_P const prefix/*=nullptr*/, FS
   if (suffix) SERIAL_ECHO(suffix); else SERIAL_EOL();
 }
 
+void print_xyz_withPrecision(NUM_AXIS_ARGS_(const_float_t) FSTR_P const prefix/*=nullptr*/, int8_t preci) {
+   if (prefix) SERIAL_ECHO(prefix);
+  #if NUM_AXES
+    //x
+    SERIAL_ECHO("X: "); SERIAL_ECHO(p_float_t(x, preci)); 
+    //y
+    SERIAL_ECHO(" Y: "); SERIAL_ECHO(p_float_t(y, preci)); 
+    //z
+    SERIAL_ECHO(" Z: "); SERIAL_ECHO(p_float_t(z, preci)); 
+
+    SERIAL_ECHOLN("\n");
+  #endif
+  
+}
+
 void print_xyze(LOGICAL_AXIS_ARGS_(const_float_t) FSTR_P const prefix/*=nullptr*/, FSTR_P const suffix/*=nullptr*/) {
   _print_xyz(NUM_AXIS_LIST_(x, y, z, i, j, k, u, v, w) prefix);
   #if HAS_EXTRUDERS
