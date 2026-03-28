@@ -206,7 +206,7 @@ public:
       return probe_at_point(pos.x, pos.y, raise_after, verbose_level, probe_relative, sanity_check, z_min_point, z_clearance, raise_after_is_rel);
     }
 
-    static float run_z_probe_multipleZHomeing(const bool sanity_check, const_float_t z_min_point, const_float_t z_clearance, uint8_t probing_iterations) { return run_z_probe(sanity_check, z_min_point, z_clearance, probing_iterations); }
+    static float run_z_probe_multipleZHomeing(const bool sanity_check, const float z_min_point, const float z_clearance, uint8_t probing_iterations) { return run_z_probe(sanity_check, z_min_point, z_clearance, probing_iterations); }
 
   #else // !HAS_BED_PROBE
 
@@ -374,7 +374,7 @@ public:
 
 private:
   #if HAS_BED_PROBE
-    static bool probe_down_to_z(const float z, const_feedRate_t fr_mm_s);
+    static bool probe_down_to_z(const float z, const feedRate_t fr_mm_s);
     static float run_z_probe(const bool sanity_check=true, const float z_min_point=Z_PROBE_LOW_POINT, const float z_clearance=Z_TWEEN_SAFE_CLEARANCE, uint8_t probing_iterations = 0);
   #endif
 };

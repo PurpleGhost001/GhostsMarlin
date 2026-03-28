@@ -1061,6 +1061,7 @@ void Motion::blocking_move(const xy_pos_t &raw, const feedRate_t fr_mm_s/*=0.0f*
     if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("blocking_move_z(", rz, ", ", fr_mm_s, ")");
     blocking_move_xy_z(position, rz, fr_mm_s);
   }
+  
   void Motion::blocking_move_xy_z(const xy_pos_t &raw, const float z, const feedRate_t fr_mm_s/*=0.0f*/) {
     blocking_move(
       NUM_AXIS_LIST_(raw.x, raw.y, z,
@@ -2658,13 +2659,13 @@ void Motion::prepare_line_to_destination() {
       if(TERN0(HOMING_Z_WITH_PROBE, axis == Z_AXIS))
       {
         xyze_pos_t plannerPos = planner.get_axis_positions_mm();
-        current_position[axis] = 0;
-        current_position[axis] -= probe.offset.z;
+        position[axis] = 0;
+        position[axis] -= probe.offset.z;
 
         if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
-        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "Ausgangsposition current_position", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(position, "Ausgangsposition position", 4);
         if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "Ausgangsposition plannerPos", 4);
-        //current_position und plannerPos noch verschieden
+        //position und plannerPos noch verschieden
         sync_plan_position();
         //jetzt syncron
 
@@ -2673,10 +2674,10 @@ void Motion::prepare_line_to_destination() {
 
         if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("platz_machen nach initialem homen");
         //platz machen nach initialem homen
-        do_z_clearance(current_position[axis] + (Z_CLEARANCE_MULTI_PROBE), false);
+        do_z_clearance(position[axis] + (Z_CLEARANCE_MULTI_PROBE), false);
         plannerPos = planner.get_axis_positions_mm();
         if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
-        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "nach platz_machen current_position", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(position, "nach platz_machen position", 4);
         if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "nach platz_machen plannerPos", 4);
         if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#"); 
 
@@ -2689,10 +2690,10 @@ void Motion::prepare_line_to_destination() {
         // DEBUG_ECHOLNPGM("#");
 
         float measured_z;
-        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "current_position", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(position, "position", 4);
         measured_z = probe.run_z_probe_multipleZHomeing(true, Z_PROBE_LOW_POINT, Z_TWEEN_SAFE_CLEARANCE, probe.probingRuns);
         plannerPos = planner.get_axis_positions_mm();
-        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "current_position nach run_z_probe", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(position, "position nach run_z_probe", 4);
         if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "plannerPos nach run_z_probe", 4);
         if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
 
@@ -2700,26 +2701,26 @@ void Motion::prepare_line_to_destination() {
         {
           DEBUG_ECHOLNPGM("Probe FAIL OHJEE");
           bltouch.stow();
-          current_position[axis] = 0;
-          current_position[axis] -= probe.offset.z;
+          position[axis] = 0;
+          position[axis] -= probe.offset.z;
           sync_plan_position();
           return;
         }
 
         DEBUG_ECHOPGM("Erfolg_Z: "); SERIAL_ECHO(p_float_t(measured_z, 3)); //SERIAL_ECHOLN() kann kein float
         DEBUG_ECHOLNPGM("#");
-        current_position[axis] = measured_z;
+        position[axis] = measured_z;
         feedRate_t moveToFeedrate =  homing_feedrate(axis);
         if (DEBUGGING(LEVELING)){
-          DEBUG_ECHOPGM("Fahre_auf: "); SERIAL_ECHO(p_float_t(current_position[axis], 3)); 
+          DEBUG_ECHOPGM("Fahre_auf: "); SERIAL_ECHO(p_float_t(position[axis], 3)); 
           DEBUG_ECHOPGM(" mit Feedrate: "); SERIAL_ECHO(p_float_t(moveToFeedrate, 1));
         } 
 
-        do_blocking_move_to_z(current_position[axis], moveToFeedrate * 0.5F);
+        blocking_move_z(position[axis], moveToFeedrate * 0.5F);
         DEBUG_ECHOLNPGM("#");
 
         plannerPos = planner.get_axis_positions_mm();
-        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(current_position, "current_position nach Fahre_auf", 4);
+        if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(position, "position nach Fahre_auf", 4);
         if (DEBUGGING(LEVELING)) SERIAL_POS_PREC(plannerPos, "plannerPos nach Fahre_auf", 4);
 
         if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("#");
@@ -2956,10 +2957,8 @@ void Motion::prepare_line_to_destination() {
  */
 void Motion::set_axis_is_at_home(const AxisEnum axis) {
   if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM(">>> set_axis_is_at_home(", C(AXIS_CHAR(axis)), ")");
-  if (DEBUGGING(LEVELING)) DEBUG_POS("1", current_position);
   set_axis_trusted(axis);
   set_axis_homed(axis);
-  if (DEBUGGING(LEVELING)) DEBUG_POS("2", current_position);
 
   #if ENABLED(DUAL_X_CARRIAGE)
     if (axis == X_AXIS && (extruder == 1 || idex_mode == DXC_DUPLICATION_MODE)) {

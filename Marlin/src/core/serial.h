@@ -250,7 +250,7 @@ inline void print_xyze(const xyze_pos_t &xyze, FSTR_P const prefix=nullptr, FSTR
   print_xyze(LOGICAL_AXIS_ELEM_LC_(xyze) prefix, suffix);
 }
 
-void print_xyz_withPrecision(NUM_AXIS_ARGS_(const_float_t) FSTR_P const prefix=nullptr, int8_t preci=2);
+void print_xyz_withPrecision(NUM_AXIS_ARGS_(const float) FSTR_P const prefix=nullptr, int8_t preci=2);
 inline void print_xyz_withPrecision(const xyz_pos_t &xyz, FSTR_P const prefix=nullptr, int8_t preci=2){
   print_xyz_withPrecision(NUM_AXIS_ELEM_(xyz) prefix, preci);
 }

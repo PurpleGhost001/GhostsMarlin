@@ -137,7 +137,7 @@ void print_xyz(NUM_AXIS_ARGS_(const float) FSTR_P const prefix/*=nullptr*/, FSTR
   if (suffix) SERIAL_ECHO(suffix); else SERIAL_EOL();
 }
 
-void print_xyz_withPrecision(NUM_AXIS_ARGS_(const_float_t) FSTR_P const prefix/*=nullptr*/, int8_t preci) {
+void print_xyz_withPrecision(NUM_AXIS_ARGS_(const float) FSTR_P const prefix/*=nullptr*/, int8_t preci) {
    if (prefix) SERIAL_ECHO(prefix);
   #if NUM_AXES
     //x
