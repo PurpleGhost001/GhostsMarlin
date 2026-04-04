@@ -4771,14 +4771,17 @@ void Temperature::isr() {
       #define MIN_COOLING_SLOPE_TIME_BED 60
     #endif
 
-    bool Temperature::wait_for_bed(const bool no_wait_for_cooling/*=true*/
-      OPTARG(G26_CLICK_CAN_CANCEL, const bool click_to_cancel/*=false*/)
-    ) {
+    bool Temperature::wait_for_bed(const bool no_wait_for_cooling/*=true*/ OPTARG(G26_CLICK_CAN_CANCEL, const bool click_to_cancel/*=false*/), int8_t residency_time_corrected) {
+      int8_t residency_time = TEMP_BED_RESIDENCY_TIME;
+      #if(ENABLED(TEMP_BED_RESIDENCY_TIME_CORRECTION))
+        residency_time = residency_time_corrected;
+      #endif
+
       #if TEMP_BED_RESIDENCY_TIME > 0
         millis_t residency_start_ms = 0;
         bool first_loop = true;
         // Loop until the temperature has stabilized
-        #define TEMP_BED_CONDITIONS (!residency_start_ms || PENDING(now, residency_start_ms, SEC_TO_MS(TEMP_BED_RESIDENCY_TIME)))
+        #define TEMP_BED_CONDITIONS (!residency_start_ms || PENDING(now, residency_start_ms, SEC_TO_MS(residency_time)))
       #else
         // Loop until the temperature is very close target
         #define TEMP_BED_CONDITIONS (wants_to_cool ? isCoolingBed() : isHeatingBed())
@@ -4814,7 +4817,7 @@ void Temperature::isr() {
           #if TEMP_BED_RESIDENCY_TIME > 0
             SString<20> s(F(" W:"));
             if (residency_start_ms)
-              s += long((SEC_TO_MS(TEMP_BED_RESIDENCY_TIME) - (now - residency_start_ms)) / 1000UL);
+              s += long((SEC_TO_MS(residency_time) - (now - residency_start_ms)) / 1000UL);
             else
               s += '?';
             s.echo();
@@ -4839,7 +4842,7 @@ void Temperature::isr() {
           if (!residency_start_ms) {
             // Start the TEMP_BED_RESIDENCY_TIME timer when we reach target temp for the first time.
             if (temp_diff < TEMP_BED_WINDOW)
-              residency_start_ms = now + (first_loop ? SEC_TO_MS(TEMP_BED_RESIDENCY_TIME) / 3 : 0);
+              residency_start_ms = now + (first_loop ? SEC_TO_MS(residency_time) / 3 : 0);
           }
           else if (temp_diff > TEMP_BED_HYSTERESIS) {
             // Restart the timer whenever the temperature falls outside the hysteresis.

@@ -628,6 +628,7 @@
 
 #if TEMP_SENSOR_BED
   #define TEMP_BED_RESIDENCY_TIME     150  // (seconds) Time to wait for bed to "settle" in M190
+  #define TEMP_BED_RESIDENCY_TIME_CORRECTION // (%) {50C,60C,70C,80C,90C,100C,110C} Prozentuale Zeit von TEMP_BED_RESIDENCY_TIME //PurpleGhost
   #define TEMP_BED_WINDOW              1  // (°C) Temperature proximity for the "temperature reached" timer
   #define TEMP_BED_HYSTERESIS          3  // (°C) Temperature proximity considered "close enough" to the target
 #endif
@@ -1701,7 +1702,7 @@
  *     |    [-]    |
  *     O-- FRONT --+
  */
-#define NOZZLE_TO_PROBE_OFFSET { 30, 9.95, -2.05 }
+#define NOZZLE_TO_PROBE_OFFSET { 30, 9.95, -2.05 } //
 
 // Enable and set to use a specific tool for probing. Disable to allow any tool.
 #define PROBING_TOOL 0
@@ -1771,7 +1772,7 @@
  * A total of 2 does fast/slow probes with a weighted average.
  * A total of 3 or more adds more slow probes, taking the average.
  */
-#define MULTIPLE_PROBING 3
+#define MULTIPLE_PROBING 5
 //#define EXTRA_PROBING    1
 
 /**

@@ -1129,7 +1129,8 @@ class Temperature {
       }
 
       static bool wait_for_bed(const bool no_wait_for_cooling=true
-        OPTARG(G26_CLICK_CAN_CANCEL, const bool click_to_cancel=false)
+        OPTARG(G26_CLICK_CAN_CANCEL, const bool click_to_cancel=false),
+        int8_t residency_time_corrected=0
       );
 
       static void wait_for_bed_heating();
