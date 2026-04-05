@@ -123,7 +123,7 @@ void GcodeSuite::M140_M190(const bool isM190) {
     float test = 0;
     #if ENABLED(TEMP_BED_RESIDENCY_TIME_CORRECTION)
       SERIAL_ECHOLNPGM("Gesetzte Temp: ", temp);
-      constexpr float corrections[] = {70,60,50,40,30,20,10};
+      constexpr float corrections[] = {70,60,50,50,50,30,20};
       constexpr float temps[] = {50,60,70,80,90,100,110};
       int8_t size = (sizeof(corrections)/sizeof(*corrections));
       for (int8_t i = 0; i < size; i++)

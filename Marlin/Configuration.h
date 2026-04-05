@@ -627,7 +627,7 @@
 #endif
 
 #if TEMP_SENSOR_BED
-  #define TEMP_BED_RESIDENCY_TIME     150  // (seconds) Time to wait for bed to "settle" in M190
+  #define TEMP_BED_RESIDENCY_TIME     180  // (seconds) Time to wait for bed to "settle" in M190
   #define TEMP_BED_RESIDENCY_TIME_CORRECTION // (%) {50C,60C,70C,80C,90C,100C,110C} Prozentuale Zeit von TEMP_BED_RESIDENCY_TIME //PurpleGhost
   #define TEMP_BED_WINDOW              1  // (°C) Temperature proximity for the "temperature reached" timer
   #define TEMP_BED_HYSTERESIS          3  // (°C) Temperature proximity considered "close enough" to the target
@@ -727,9 +727,9 @@
     #define DEFAULT_KI_LIST {   1.08,   1.08 }
     #define DEFAULT_KD_LIST { 114.00, 114.00 }
   #else
-    #define DEFAULT_KP 24.86
-    #define DEFAULT_KI 2.43
-    #define DEFAULT_KD 63.64
+    #define DEFAULT_KP 25.04
+    #define DEFAULT_KI 2.17
+    #define DEFAULT_KD 72.12
   #endif
 #else
   #define BANG_MAX 255    // Limit hotend current while in bang-bang mode; 255=full current
